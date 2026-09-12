@@ -1,1 +1,252 @@
-<h1>Bubu learnning</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Rushial Tickoo — Fintechs, Payments, RuPay & UPI">
+<title>Rushial Tickoo — Fintechs · Payments · UPI</title>
+<style>
+  :root{
+    --bg:#f5f5f7; --surface:rgba(255,255,255,.72); --solid:#fff;
+    --ink:#1d1d1f; --muted:#6e6e73; --line:rgba(0,0,0,.09);
+    --accent:#0071e3; --dark:#161617; --shadow:0 20px 60px rgba(0,0,0,.08);
+    --radius:28px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .nav{position:fixed;top:0;left:0;right:0;z-index:20;height:58px;background:rgba(245,245,247,.78);backdrop-filter:saturate(180%) blur(22px);border-bottom:1px solid rgba(0,0,0,.06)}
+  .nav-inner{max-width:1120px;height:100%;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
+  .brand{font-weight:650;letter-spacing:-.02em}
+  .nav-links{display:flex;gap:28px;color:#555;font-size:13px}
+  .nav-links a{transition:.2s}
+  .nav-links a:hover{color:#000}
+  .menu{display:none;border:0;background:none;font-size:22px}
+  main{padding-top:58px}
+  section{scroll-margin-top:80px}
+  .hero{min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;text-align:center;padding:90px 24px 100px;position:relative;overflow:hidden}
+  .hero:before{content:"";position:absolute;width:650px;height:650px;border-radius:50%;background:radial-gradient(circle,rgba(0,113,227,.13),transparent 67%);top:8%;left:50%;transform:translateX(-50%);pointer-events:none}
+  .eyebrow{font-size:15px;color:var(--accent);font-weight:600;letter-spacing:.01em;margin-bottom:22px;position:relative}
+  h1{font-size:clamp(54px,9vw,112px);line-height:.95;letter-spacing:-.065em;margin:0;position:relative;font-weight:700}
+  .hero-sub{font-size:clamp(21px,3vw,32px);line-height:1.15;letter-spacing:-.025em;color:#424245;max-width:760px;margin:30px auto 0;position:relative}
+  .hero-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:30px;position:relative}
+  .pill{padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.8);border:1px solid var(--line);font-size:13px;color:#555}
+  .cta-row{display:flex;justify-content:center;gap:12px;margin-top:38px;position:relative}
+  .btn{padding:13px 20px;border-radius:999px;font-size:14px;font-weight:600;transition:transform .2s,box-shadow .2s}
+  .btn:hover{transform:translateY(-2px)}
+  .btn-primary{background:#0071e3;color:#fff;box-shadow:0 8px 24px rgba(0,113,227,.22)}
+  .btn-secondary{background:#fff;border:1px solid var(--line)}
+  .wrap{max-width:1120px;margin:auto;padding:0 24px}
+  .section{padding:110px 0}
+  .section-head{display:flex;align-items:end;justify-content:space-between;gap:30px;margin-bottom:42px}
+  .kicker{font-size:14px;font-weight:600;color:var(--accent);margin-bottom:10px}
+  h2{font-size:clamp(38px,6vw,64px);letter-spacing:-.055em;line-height:1;margin:0}
+  .section-note{max-width:380px;color:var(--muted);font-size:16px;line-height:1.5}
+  .statement{font-size:clamp(30px,4.5vw,54px);line-height:1.05;letter-spacing:-.045em;max-width:950px;margin:0}
+  .statement em{font-style:normal;color:#8a8a8f}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{background:var(--solid);border-radius:var(--radius);padding:30px;min-height:210px;border:1px solid var(--line);box-shadow:0 8px 30px rgba(0,0,0,.035);transition:transform .3s,box-shadow .3s}
+  .card:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+  .card-icon{width:42px;height:42px;border-radius:12px;background:#f2f2f4;display:grid;place-items:center;margin-bottom:30px;color:#111}
+  .card h3{font-size:21px;letter-spacing:-.025em;margin:0 0 9px}
+  .card p{font-size:15px;color:var(--muted);line-height:1.5;margin:0}
+  .experience{background:var(--dark);color:#f5f5f7;border-radius:36px;padding:70px 64px;overflow:hidden}
+  .experience .kicker{color:#6cb7ff}
+  .experience .section-head{margin-bottom:55px}
+  .experience .section-note{color:#a1a1a6}
+  .timeline{position:relative}
+  .timeline:before{content:"";position:absolute;left:8px;top:10px;bottom:10px;width:1px;background:#444}
+  .role{display:grid;grid-template-columns:190px 1fr;gap:48px;padding:0 0 54px;position:relative}
+  .role:last-child{padding-bottom:0}
+  .role:before{content:"";position:absolute;left:4px;top:9px;width:9px;height:9px;border-radius:50%;background:#f5f5f7;box-shadow:0 0 0 5px #161617}
+  .date{padding-left:32px;color:#8e8e93;font-size:13px;line-height:1.5}
+  .date strong{display:block;color:#d2d2d7;font-weight:500}
+  .role h3{font-size:25px;letter-spacing:-.03em;margin:0 0 7px}
+  .company{color:#a1a1a6;font-size:15px;margin-bottom:16px}
+  .role-tag{display:inline-block;padding:6px 10px;border:1px solid #3a3a3c;border-radius:999px;color:#d2d2d7;font-size:12px}
+  .education-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:16px}
+  .edu{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:34px;min-height:220px}
+  .edu .year{color:var(--accent);font-size:13px;font-weight:600;margin-bottom:48px}
+  .edu h3{font-size:24px;letter-spacing:-.03em;margin:0 0 8px}
+  .edu p{margin:0;color:var(--muted);line-height:1.5}
+  .recognition{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .award{background:#fff;border-radius:24px;padding:26px;border:1px solid var(--line)}
+  .award strong{font-size:17px}
+  .award span{display:block;color:var(--muted);font-size:14px;margin-top:6px}
+  .contact{padding:100px 0 80px;text-align:center}
+  .contact h2{max-width:800px;margin:0 auto}
+  .contact p{color:var(--muted);font-size:17px;margin:22px auto 30px}
+  footer{padding:25px 24px 35px;color:#8a8a8f;font-size:12px;text-align:center}
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease}
+  .reveal.visible{opacity:1;transform:none}
+  @media(max-width:800px){
+    .nav-links{display:none}.menu{display:block}
+    .hero{min-height:calc(100vh - 58px);padding-top:70px}
+    .cards,.education-grid,.recognition{grid-template-columns:1fr}
+    .section{padding:80px 0}
+    .section-head{display:block}.section-note{margin-top:18px}
+    .experience{padding:46px 25px;border-radius:28px}
+    .role{grid-template-columns:1fr;gap:10px;padding-bottom:42px}
+    .date{padding-left:32px}
+    .role h3,.company,.role-tag{margin-left:32px}
+    .role h3{font-size:22px}
+  }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">Rushial Tickoo</a>
+    <div class="nav-links">
+      <a href="#about">About</a><a href="#experience">Experience</a><a href="#education">Education</a><a href="#connect">Connect</a>
+    </div>
+    <button class="menu" aria-label="Menu" onclick="document.querySelector('.nav-links').style.display=document.querySelector('.nav-links').style.display==='flex'?'none':'flex'">☰</button>
+  </div>
+</nav>
+
+<main id="top">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Fintechs · Payments · RuPay · UPI</div>
+      <h1>Rushial<br>Tickoo.</h1>
+      <p class="hero-sub">Building and scaling fintech use cases across India’s digital payment ecosystem.</p>
+      <div class="hero-meta">
+        <span class="pill">Mumbai, Maharashtra, India</span>
+        <span class="pill">Program Management</span>
+        <span class="pill">Revenue &amp; Profit Growth</span>
+        <span class="pill">Early-Stage Startups</span>
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="mailto:rtickoo1965@gmail.com">Get in touch</a>
+        <a class="btn btn-secondary" href="https://www.linkedin.com/in/rushialtickoo" target="_blank" rel="noopener">LinkedIn ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section reveal">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="kicker">01 — Focus</div><h2>What I work on.</h2></div>
+        <div class="section-note">A career spanning technology, finance, fintech solutions, product innovation and UPI growth.</div>
+      </div>
+      <p class="statement">Turning complex payment ecosystems into <em>scalable, useful experiences.</em></p>
+      <div class="cards" style="margin-top:50px">
+        <article class="card">
+          <div class="card-icon">↗</div>
+          <h3>Program Management</h3>
+          <p>Driving initiatives across stakeholders, products and the broader payments ecosystem.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">◒</div>
+          <h3>Growth</h3>
+          <p>Focused on revenue &amp; profit growth and scaling fintech use cases.</p>
+        </article>
+        <article class="card">
+          <div class="card-icon">✦</div>
+          <h3>Early-Stage Startups</h3>
+          <p>Experience working around emerging businesses, innovation and new fintech opportunities.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience" class="section reveal">
+    <div class="wrap">
+      <div class="experience">
+        <div class="section-head">
+          <div><div class="kicker">02 — Experience</div><h2>Building at scale.</h2></div>
+          <div class="section-note">National Payments Corporation Of India and earlier experience across fintech, consulting and financial services.</div>
+        </div>
+        <div class="timeline">
+          <article class="role">
+            <div class="date"><strong>Sep 2025 — Present</strong>1 year 1 month<br>Mumbai</div>
+            <div><h3>Lead — UPI Growth</h3><div class="company">National Payments Corporation Of India (NPCI)</div><span class="role-tag">Current role</span></div>
+          </article>
+          <article class="role">
+            <div class="date"><strong>Jul 2023 — Aug 2025</strong>2 years 2 months<br>Mumbai</div>
+            <div><h3>Lead — Product &amp; Innovation</h3><div class="company">National Payments Corporation Of India (NPCI)</div></div>
+          </article>
+          <article class="role">
+            <div class="date"><strong>Aug 2021 — Jun 2023</strong>1 year 11 months<br>Mumbai</div>
+            <div><h3>Lead — Fintech Solutions</h3><div class="company">National Payments Corporation Of India (NPCI)</div></div>
+          </article>
+          <article class="role">
+            <div class="date"><strong>Apr 2020 — May 2020</strong>2 months<br>Mumbai</div>
+            <div><h3>Summer Intern</h3><div class="company">Aditya Birla Group</div></div>
+          </article>
+          <article class="role">
+            <div class="date"><strong>Dec 2017 — Dec 2018</strong>1 year 1 month<br>Mumbai</div>
+            <div><h3>Software Engineer</h3><div class="company">Capgemini</div></div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="education" class="section reveal">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="kicker">03 — Education</div><h2>Two lenses.</h2></div>
+        <div class="section-note">Technology foundations paired with management and finance.</div>
+      </div>
+      <div class="education-grid">
+        <article class="edu">
+          <div class="year">2019 — 2021</div>
+          <h3>Jamnalal Bajaj Institute of Management Studies</h3>
+          <p>MBA/MMS · Finance, General</p>
+        </article>
+        <article class="edu">
+          <div class="year">2013 — 2017</div>
+          <h3>Fr. Conceicao Rodrigues College of Engineering</h3>
+          <p>Bachelor of Engineering (BE) · Computer Science</p>
+        </article>
+      </div>
+      <div class="edu" style="margin-top:16px;min-height:auto">
+        <div class="year" style="margin-bottom:18px">1998 — 2013</div>
+        <h3>Delhi Public School — India</h3>
+      </div>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="wrap">
+      <div class="section-head">
+        <div><div class="kicker">04 — Recognition</div><h2>Recognition.</h2></div>
+      </div>
+      <div class="recognition">
+        <div class="award"><strong>Well Done Award</strong><span>Recognition received</span></div>
+        <div class="award"><strong>Well Done Award</strong><span>Recognition received</span></div>
+        <div class="award"><strong>Highest Performer of the Quarter</strong><span>Performance recognition</span></div>
+        <div class="award"><strong>Certifications</strong><span>ISO 20022 for Instant Retail Payments · Certified Card Payment System Professionals Certification · Build with Andrew</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="connect" class="contact reveal">
+    <div class="wrap">
+      <div class="kicker">05 — Connect</div>
+      <h2>Let’s build what’s next.</h2>
+      <p>For conversations around fintech, payments, UPI, product innovation and growth.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="mailto:rtickoo1965@gmail.com">rtickoo1965@gmail.com</a>
+        <a class="btn btn-secondary" href="https://www.linkedin.com/in/rushialtickoo" target="_blank" rel="noopener">View LinkedIn ↗</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>© <span id="year"></span> Rushial Tickoo · Mumbai, India</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, {threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  document.querySelectorAll('.nav-links a').forEach(a => a.addEventListener('click', () => {
+    if(window.innerWidth <= 800) document.querySelector('.nav-links').style.display='none';
+  }));
+</script>
+</body>
+</html>
