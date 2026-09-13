@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Simulator — Learn Retrieval Augmented Generation</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    :root {
+        --bg: #f5f7fb;
+        --card: rgba(255,255,255,.88);
+        --text: #172033;
+        --muted: #687386;
+        --border: #e5e9f0;
+        --accent: #635bff;
+        --accent-light: #eeedff;
+        --green: #18a566;
+        --green-light: #e9f9f1;
+        --orange: #e99525;
+        --orange-light: #fff4df;
+        --red: #e45858;
+        --blue: #2785e8;
+        --shadow: 0 12px 40px rgba(20, 30, 55, .08);
+    }
+
+    body {
+        margin: 0;
+        background:
+            radial-gradient(circle at 10% 0%, #ebe9ff 0, transparent 28%),
+            radial-gradient(circle at 90% 10%, #e6f4ff 0, transparent 25%),
+            var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+        min-height: 100vh;
+    }
+
+    header {
+        padding: 42px 28px 28px;
+        text-align: center;
+    }
+
+    .eyebrow {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: var(--accent-light);
+        color: var(--accent);
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+    }
+
+    h1 {
+        font-size: clamp(32px, 5vw, 52px);
+        letter-spacing: -2px;
+        margin: 16px 0 10px;
+    }
+
+    header p {
+        color: var(--muted);
+        max-width: 720px;
+        margin: auto;
+        font-size: 17px;
+        line-height: 1.6;
+    }
+
+    .app {
+        width: min(1400px, calc(100% - 32px));
+        margin: 0 auto 60px;
+    }
+
+    /* Pipeline */
+
+    .pipeline {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 8px;
+        margin-bottom: 22px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+
+    .pipeline-step {
+        min-width: 110px;
+        padding: 13px 9px;
+        background: rgba(255,255,255,.8);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        transition: .25s;
+    }
+
+    .pipeline-step span {
+        display: block;
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
+
+    .pipeline-step.active {
+        color: var(--accent);
+        border-color: #c9c6ff;
+        background: var(--accent-light);
+        transform: translateY(-2px);
+    }
+
+    /* Layout */
+
+    .grid {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: var(--card);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,.8);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 22px;
+    }
+
+    .card + .card {
+        margin-top: 20px;
+    }
+
+    .card-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .card-title h2 {
+        font-size: 17px;
+        margin: 0;
+    }
+
+    .badge {
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 5px 9px;
+        background: #f0f2f6;
+        color: var(--muted);
+    }
+
+    label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        margin: 16px 0 7px;
+    }
+
+    textarea, input, select {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        font: inherit;
+        outline: none;
+        background: white;
+        color: var(--text);
+        transition: .2s;
+    }
+
+    textarea:focus, input:focus, select:focus {
+        border-color: #aaa6ff;
+        box-shadow: 0 0 0 3px rgba(99,91,255,.1);
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 210px;
+        line-height: 1.55;
+    }
+
+    .query {
+        min-height: 95px;
+    }
+
+    .range-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    input[type="range"] {
+        padding: 0;
+        accent-color: var(--accent);
+    }
+
+    .value {
+        min-width: 42px;
+        text-align: right;
+        font-weight: 800;
+        font-size: 13px;
+    }
+
+    button {
+        width: 100%;
+        border: 0;
+        border-radius: 13px;
+        padding: 13px 16px;
+        margin-top: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        background: var(--accent);
+        color: white;
+        transition: .2s;
+        box-shadow: 0 7px 20px rgba(99,91,255,.22);
+    }
+
+    button:hover {
+        transform: translateY(-1px);
+        filter: brightness(.97);
+    }
+
+    button.secondary {
+        background: white;
+        color: var(--text);
+        border: 1px solid var(--border);
+        box-shadow: none;
+    }
+
+    .stage {
+        display: none;
+        animation: fade .35s ease;
+    }
+
+    .stage.visible {
+        display: block;
+    }
+
+    @keyframes fade {
+        from { opacity: 0; transform: translateY(7px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .explanation {
+        padding: 15px 16px;
+        background: #f8f9fc;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        margin-bottom: 16px;
+        line-height: 1.55;
+        color: #4f5a6d;
+        font-size: 13px;
+    }
+
+    .explanation strong {
+        color: var(--text);
+    }
+
+    /* Chunks */
+
+    .chunks {
+        display: grid;
+        gap: 10px;
+        max-height: 430px;
+        overflow: auto;
+    }
+
+    .chunk {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 13px;
+    }
+
+    .chunk-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 800;
+    }
+
+    .chunk-text {
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    /* Embeddings */
+
+    .embedding {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        padding: 10px;
+        background: #fafaff;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+
+    .num {
+        padding: 5px 7px;
+        border-radius: 7px;
+        background: var(--accent-light);
+        color: #514bd1;
+        font-family: monospace;
+        font-size: 11px;
+    }
+
+    /* Search */
+
+    .result {
+        border: 1px solid var(--border);
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 10px;
+    }
+
+    .result.best {
+        border-color: #a7e4c6;
+        background: var(--green-light);
+    }
+
+    .score {
+        font-size: 13px;
+        font-weight: 900;
+        color: var(--green);
+    }
+
+    .bar {
+        height: 7px;
+        border-radius: 999px;
+        background: #edf0f4;
+        overflow: hidden;
+        margin: 10px 0;
+    }
+
+    .bar-inner {
+        height: 100%;
+        background: var(--accent);
+        border-radius: inherit;
+    }
+
+    /* Context */
+
+    .context-box {
+        background: #171b27;
+        color: #e9edf7;
+        border-radius: 15px;
+        padding: 17px;
+        font-family: monospace;
+        font-size: 12px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+        overflow: auto;
+    }
+
+    .context-label {
+        color: #999fb2;
+    }
+
+    /* Answer */
+
+    .answer {
+        background: linear-gradient(135deg, #f3f1ff, #eef8ff);
+        border: 1px solid #dcd9ff;
+        border-radius: 18px;
+        padding: 20px;
+        line-height: 1.7;
+        font-size: 15px;
+    }
+
+    .answer .ai {
+        display: inline-flex;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: white;
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 900;
+        margin-bottom: 10px;
+    }
+
+    /* Stats */
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .stat {
+        padding: 14px;
+        border-radius: 14px;
+        background: white;
+        border: 1px solid var(--border);
+    }
+
+    .stat-value {
+        font-size: 22px;
+        font-weight: 900;
+    }
+
+    .stat-label {
+        color: var(--muted);
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    .learn {
+        margin-top: 20px;
+        padding: 18px;
+        border-radius: 17px;
+        background: var(--orange-light);
+        border: 1px solid #f3d79e;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .learn strong {
+        color: #9c6415;
+    }
+
+    .empty {
+        padding: 40px;
+        text-align: center;
+        color: var(--muted);
+        border: 1px dashed var(--border);
+        border-radius: 15px;
+    }
+
+    @media(max-width: 950px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pipeline {
+            grid-template-columns: repeat(10, 110px);
+        }
+    }
+
+    @media(max-width: 600px) {
+        .stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .app {
+            width: min(100% - 20px, 1400px);
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="eyebrow">Interactive AI Learning Lab</div>
+    <h1>RAG Simulator</h1>
+    <p>
+        See what actually happens between uploading a document and receiving
+        an AI answer — step by step.
+    </p>
+</header>
+
+<div class="app">
+
+    <!-- PIPELINE -->
+    <div class="pipeline" id="pipeline">
+        <div class="pipeline-step active"><span>📄</span>Document</div>
+        <div class="pipeline-step"><span>✂️</span>Chunk</div>
+        <div class="pipeline-step"><span>🧠</span>Embed</div>
+        <div class="pipeline-step"><span>🗄️</span>Store</div>
+        <div class="pipeline-step"><span>❓</span>Query</div>
+        <div class="pipeline-step"><span>🔢</span>Query Embed</div>
+        <div class="pipeline-step"><span>🔎</span>Retrieve</div>
+        <div class="pipeline-step"><span>🎯</span>Rerank</div>
+        <div class="pipeline-step"><span>📦</span>Context</div>
+        <div class="pipeline-step"><span>✨</span>Generate</div>
+    </div>
+
+    <div class="grid">
+
+        <!-- LEFT CONTROLS -->
+        <aside>
+
+            <div class="card">
+                <div class="card-title">
+                    <h2>1. Your Document</h2>
+                    <span class="badge">INGESTION</span>
+                </div>
+
+                <div class="explanation">
+                    <strong>Think:</strong> This is the information your
+                    RAG system needs to make searchable.
+                </div>
+
+                <textarea id="document">Acme Technologies — Employee Handbook
+
+Annual Leave:
+Employees receive 24 days of paid annual leave every calendar year. Leave must be requested through the HR portal at least three working days in advance. Unused annual leave can be carried forward up to a maximum of 12 days.
+
+Sick Leave:
+Employees receive 12 days of sick leave per year. A medical certificate may be requested for absences longer than two consecutive working days.
+
+Work From Home:
+Employees can work from home up to two days per week with manager approval. Employees must remain available during their standard working hours.
+
+Parental Leave:
+Eligible employees receive 26 weeks of paid parental leave. The leave can be taken continuously or split into two periods with HR approval.
+
+Learning Budget:
+Every employee receives an annual learning budget of ₹50,000. This can be used for professional courses, conferences, books and certifications.</textarea>
+
+                <button onclick="runRAG()">Run RAG Pipeline →</button>
+                <button class="secondary" onclick="resetSimulator()">Reset</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <h2>RAG Controls</h2>
+                    <span class="badge">EXPERIMENT</span>
+                </div>
+
+                <label>Chunk Size</label>
+                <div class="range-row">
+                    <input id="chunkSize" type="range" min="60" max="250" value="140"
+                           oninput="updateValue('chunkSize','chunkSizeValue')">
+                    <span class="value" id="chunkSizeValue">140</span>
+                </div>
+
+                <label>Chunk Overlap</label>
+                <div class="range-row">
+                    <input id="overlap" type="range" min="0" max="60" value="25"
+                           oninput="updateValue('overlap','overlapValue')">
+                    <span class="value" id="overlapValue">25</span>
+                </div>
+
+                <label>Top-K Results</label>
+                <div class="range-row">
+                    <input id="topK" type="range" min="1" max="6" value="3"
+                           oninput="updateValue('topK','topKValue')">
+                    <span class="value" id="topKValue">3</span>
+                </div>
+
+                <label>Similarity Threshold</label>
+                <div class="range-row">
+                    <input id="threshold" type="range" min="0" max="100" value="25"
+                           oninput="updateValue('threshold','thresholdValue')">
+                    <span class="value" id="thresholdValue">25%</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <h2>2. Ask a Question</h2>
+                    <span class="badge">RETRIEVAL</span>
+                </div>
+
+                <textarea class="query" id="query">How many days of annual leave do employees receive?</textarea>
+
+                <button onclick="runQuery()">Search Knowledge Base →</button>
+            </div>
+
+        </aside>
+
+        <!-- RIGHT CONTENT -->
+        <main>
+
+            <!-- Stage 1 -->
+            <section class="card stage visible" id="stage-document">
+                <div class="card-title">
+                    <h2>① Document Ingestion</h2>
+                    <span class="badge">RAW DATA</span>
+                </div>
+
+                <div class="explanation">
+                    Your document is the <strong>source of truth</strong>.
+                    A real RAG system first parses files such as PDFs,
+                    Word documents, webpages or databases into machine-readable text.
+                </div>
+
+                <div class="context-box" id="rawPreview"></div>
+            </section>
+
+            <!-- Stage 2 -->
+            <section class="card stage" id="stage-chunks">
+                <div class="card-title">
+                    <h2>② Chunking</h2>
+                    <span class="badge" id="chunkCount">0 CHUNKS</span>
+                </div>
+
+                <div class="explanation">
+                    Large documents are split into smaller pieces.
+                    The goal is to create chunks that contain enough meaning
+                    to answer questions without sending the entire document
+                    to the LLM.
+                    <br><br>
+                    <strong>Overlap:</strong> neighboring chunks share some
+                    text so important information isn't accidentally split apart.
+                </div>
+
+                <div class="chunks" id="chunks"></div>
+            </section>
+
+            <!-- Stage 3 -->
+            <section class="card stage" id="stage-embeddings">
+                <div class="card-title">
+                    <h2>③ Embeddings</h2>
+                    <span class="badge">VECTOR REPRESENTATION</span>
+                </div>
+
+                <div class="explanation">
+                    Each chunk is converted by an embedding model into a
+                    numerical vector. This simulator uses a small
+                    educational vector representation rather than a real
+                    embedding model.
+                    <br><br>
+                    Real models may generate hundreds or thousands of dimensions.
+                </div>
+
+                <div class="chunks" id="embeddings"></div>
+            </section>
+
+            <!-- Stage 4 -->
+            <section class="card stage" id="stage-store">
+                <div class="card-title">
+                    <h2>④ Vector Database</h2>
+                    <span class="badge">STORAGE</span>
+                </div>
+
+                <div class="explanation">
+                    The vectors are stored alongside the original text and
+                    metadata. A vector database lets us efficiently find
+                    vectors that are semantically similar to a query.
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value" id="storedChunks">0</div>
+                        <div class="stat-label">Chunks stored</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-value">Vector</div>
+                        <div class="stat-label">Search type</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-value">Cosine</div>
+                        <div class="stat-label">Similarity</div>
+                    </div>
+
+                    <div class="stat">
+                        <div class="stat-value">Local</div>
+                        <div class="stat-label">Simulator DB</div>
+                    </div>
+                </div>
+
+                <div class="learn">
+                    <strong>Important:</strong>
+                    A real vector database could be Pinecone, Weaviate,
+                    Qdrant, Milvus, pgvector, Elasticsearch, etc.
+                    This demo keeps everything inside your browser.
+                </div>
+            </section>
+
+            <!-- Stage 5 -->
+            <section class="card stage" id="stage-query">
+                <div class="card-title">
+                    <h2>⑤ User Query</h2>
+                    <span class="badge">QUESTION</span>
+                </div>
+
+                <div class="explanation">
+                    The user doesn't search for an exact paragraph.
+                    They ask a natural-language question.
+                    The system now needs to find the pieces of knowledge
+                    most relevant to that question.
+                </div>
+
+                <div class="answer">
+                    <strong id="queryDisplay"></strong>
+                </div>
+            </section>
+
+            <!-- Stage 6 -->
+            <section class="card stage" id="stage-query-embedding">
+                <div class="card-title">
+                    <h2>⑥ Query → Embedding</h2>
+                    <span class="badge">VECTOR SEARCH</span>
+                </div>
+
+                <div class="explanation">
+                    The question is passed through the <strong>same embedding
+                    model</strong> used for the documents. This produces a
+                    vector representing the meaning of the query.
+                </div>
+
+                <div class="embedding" id="queryEmbedding"></div>
+            </section>
+
+            <!-- Stage 7 -->
+            <section class="card stage" id="stage-retrieve">
+                <div class="card-title">
+                    <h2>⑦ Similarity Search</h2>
+                    <span class="badge">RETRIEVAL</span>
+                </div>
+
+                <div class="explanation">
+                    The query vector is compared with stored chunk vectors.
+                    Higher similarity means the chunk is considered more
+                    semantically relevant.
+                </div>
+
+                <div id="retrievalResults"></div>
+            </section>
+
+            <!-- Stage 8 -->
+            <section class="card stage" id="stage-rerank">
+                <div class="card-title">
+                    <h2>⑧ Reranking</h2>
+                    <span class="badge">PRECISION</span>
+                </div>
+
+                <div class="explanation">
+                    Many production RAG systems don't blindly send the first
+                    vector-search results to the LLM. A reranker can examine
+                    the query and candidate chunks more carefully and reorder
+                    them by relevance.
+                </div>
+
+                <div id="rerankResults"></div>
+
+                <div class="learn">
+                    <strong>Why rerank?</strong>
+                    Vector search is fast but can sometimes retrieve chunks
+                    that are only approximately relevant. Reranking adds a
+                    second relevance check.
+                </div>
+            </section>
+
+            <!-- Stage 9 -->
+            <section class="card stage" id="stage-context">
+                <div class="card-title">
+                    <h2>⑨ Context Construction</h2>
+                    <span class="badge">AUGMENTATION</span>
+                </div>
+
+                <div class="explanation">
+                    This is the step people often miss when learning RAG.
+                    The retrieved chunks are inserted into a prompt that is
+                    sent to the LLM.
+                    <br><br>
+                    <strong>This is the "Augmented" part of Retrieval
+                    Augmented Generation.</strong>
+                </div>
+
+                <div class="context-box" id="context"></div>
+            </section>
+
+            <!-- Stage 10 -->
+            <section class="card stage" id="stage-generate">
+                <div class="card-title">
+                    <h2>⑩ LLM Generation</h2>
+                    <span class="badge">GENERATION</span>
+                </div>
+
+                <div class="explanation">
+                    Finally, the LLM receives the user's question plus the
+                    retrieved context. It uses that context to generate
+                    an answer.
+                </div>
+
+                <div class="answer">
+                    <div class="ai">✨ AI GENERATED ANSWER</div>
+                    <div id="finalAnswer"></div>
+                </div>
+
+                <div class="learn">
+                    <strong>Key distinction:</strong>
+                    The vector database retrieves information.
+                    The LLM generates the response.
+                    The vector database itself does not "answer" the question.
+                </div>
+            </section>
+
+        </main>
+    </div>
+</div>
+
+<script>
+
+let chunks = [];
+let embeddings = [];
+let currentResults = [];
+let queryVector = [];
+
+/* ---------------------------------------
+   SIMPLE EDUCATIONAL EMBEDDING
+--------------------------------------- */
+
+const vocabulary = [
+    "annual","leave","days","paid","employee","employees",
+    "sick","medical","certificate","work","home","manager",
+    "approval","parental","weeks","learning","budget",
+    "courses","conference","books","certifications",
+    "hr","portal","requested","working","hours",
+    "carry","forward","unused","absence"
+];
+
+function tokenize(text) {
+    return text
+        .toLowerCase()
+        .replace(/[^\w₹]+/g, " ")
+        .split(/\s+/)
+        .filter(Boolean);
+}
+
+function embed(text) {
+
+    const words = tokenize(text);
+
+    return vocabulary.map(word => {
+
+        let count = 0;
+
+        words.forEach(w => {
+            if (w === word) count += 1;
+
+            /*
+              Tiny amount of semantic-ish matching
+              for educational purposes.
+            */
+            if (
+                word === "annual" &&
+                ["year","yearly","calendar"].includes(w)
+            ) count += .5;
+
+            if (
+                word === "employees" &&
+                ["employee","employees","staff","workers"].includes(w)
+            ) count += .8;
+
+            if (
+                word === "leave" &&
+                ["vacation","holiday","absence"].includes(w)
+            ) count += .7;
+        });
+
+        return count;
+    });
+}
+
+function cosineSimilarity(a,b) {
+
+    let dot = 0;
+    let magA = 0;
+    let magB = 0;
+
+    for(let i=0;i<a.length;i++) {
+        dot += a[i] * b[i];
+        magA += a[i] * a[i];
+        magB += b[i] * b[i];
+    }
+
+    if(!magA || !magB) return 0;
+
+    return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+/* ---------------------------------------
+   CHUNKING
+--------------------------------------- */
+
+function createChunks(text, size, overlap) {
+
+    const result = [];
+
+    /*
+      First attempt to preserve paragraph meaning.
+    */
+    const paragraphs = text
+        .split(/\n+/)
+        .map(x => x.trim())
+        .filter(Boolean);
+
+    let buffer = "";
+
+    paragraphs.forEach(p => {
+
+        if ((buffer + " " + p).trim().length <= size) {
+
+            buffer = (buffer + " " + p).trim();
+
+        } else {
+
+            if(buffer) result.push(buffer);
+
+            /*
+              Character-based fallback.
+            */
+            if(p.length <= size) {
+
+                buffer = p;
+
+            } else {
+
+                let start = 0;
+
+                while(start < p.length) {
+
+                    let end = Math.min(start + size, p.length);
+
+                    result.push(p.slice(start,end).trim());
+
+                    start = Math.max(
+                        end - overlap,
+                        start + 1
+                    );
+                }
+
+                buffer = "";
+            }
+        }
+    });
+
+    if(buffer) result.push(buffer);
+
+    return result;
+}
+
+/* ---------------------------------------
+   UI
+--------------------------------------- */
+
+function updateValue(id, outputId) {
+
+    let value = document.getElementById(id).value;
+
+    if(id === "threshold") value += "%";
+
+    document.getElementById(outputId).textContent = value;
+}
+
+function showStage(id) {
+
+    document.querySelectorAll(".stage")
+        .forEach(x => x.classList.remove("visible"));
+
+    document.getElementById(id)
+        .classList.add("visible");
+}
+
+function activatePipeline(index) {
+
+    document.querySelectorAll(".pipeline-step")
+        .forEach((x,i) => {
+            x.classList.toggle("active", i === index);
+        });
+}
+
+function renderChunks() {
+
+    const container = document.getElementById("chunks");
+
+    container.innerHTML = "";
+
+    chunks.forEach((chunk,i) => {
+
+        container.innerHTML += `
+            <div class="chunk">
+                <div class="chunk-header">
+                    <span>CHUNK ${i+1}</span>
+                    <span>${chunk.length} characters</span>
+                </div>
+                <div class="chunk-text">${escapeHtml(chunk)}</div>
+            </div>
+        `;
+    });
+
+    document.getElementById("chunkCount")
+        .textContent = chunks.length + " CHUNKS";
+
+    document.getElementById("storedChunks")
+        .textContent = chunks.length;
+}
+
+function renderEmbeddings() {
+
+    const container = document.getElementById("embeddings");
+
+    container.innerHTML = "";
+
+    embeddings.forEach((vector,i) => {
+
+        container.innerHTML += `
+            <div class="chunk">
+                <div class="chunk-header">
+                    <span>CHUNK ${i+1}</span>
+                    <span>${vector.length} dimensions</span>
+                </div>
+
+                <div class="embedding">
+                    ${vector.map(v =>
+                        `<span class="num">${v.toFixed(2)}</span>`
+                    ).join("")}
+                </div>
+            </div>
+        `;
+    });
+}
+
+function renderQueryEmbedding() {
+
+    document.getElementById("queryEmbedding").innerHTML =
+        queryVector.map(v =>
+            `<span class="num">${v.toFixed(2)}</span>`
+        ).join("");
+}
+
+function escapeHtml(text) {
+
+    return text
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+}
+
+/* ---------------------------------------
+   MAIN INGESTION PIPELINE
+--------------------------------------- */
+
+function runRAG() {
+
+    const text =
+        document.getElementById("document").value;
+
+    const size =
+        Number(document.getElementById("chunkSize").value);
+
+    const overlap =
+        Number(document.getElementById("overlap").value);
+
+    chunks = createChunks(text,size,overlap);
+
+    embeddings = chunks.map(embed);
+
+    document.getElementById("rawPreview")
+        .textContent = text;
+
+    renderChunks();
+    renderEmbeddings();
+
+    showStage("stage-document");
+    activatePipeline(0);
+
+    /*
+      Automatically scroll to the beginning.
+    */
+    window.scrollTo({
+        top: document.getElementById("stage-document")
+            .getBoundingClientRect().top
+            + window.scrollY - 20,
+        behavior:"smooth"
+    });
+}
+
+/* ---------------------------------------
+   QUERY PIPELINE
+--------------------------------------- */
+
+function runQuery() {
+
+    if(!chunks.length) {
+
+        runRAG();
+
+        setTimeout(runQuery,300);
+
+        return;
+    }
+
+    const query =
+        document.getElementById("query").value.trim();
+
+    queryVector = embed(query);
+
+    const topK =
+        Number(document.getElementById("topK").value);
+
+    const threshold =
+        Number(document.getElementById("threshold").value) / 100;
+
+    /*
+      VECTOR RETRIEVAL
+    */
+
+    let scored = chunks.map((chunk,i) => {
+
+        return {
+            index:i,
+            text:chunk,
+            vector:embeddings[i],
+            score:cosineSimilarity(queryVector, embeddings[i])
+        };
+
+    });
+
+    scored.sort((a,b) => b.score - a.score);
+
+    currentResults =
+        scored
+        .filter(x => x.score >= threshold)
+        .slice(0,topK);
+
+    /*
+      If threshold eliminates everything,
+      show the best result so the simulator remains useful.
+    */
+
+    if(!currentResults.length) {
+        currentResults = scored.slice(0,1);
+    }
+
+    /*
+      Educational reranking.
+      We add a small exact-keyword relevance signal.
+    */
+
+    currentResults = currentResults.map(item => {
+
+        const queryWords = tokenize(query);
+
+        const textWords = tokenize(item.text);
+
+        let overlapCount = 0;
+
+        queryWords.forEach(word => {
+            if(textWords.includes(word)) overlapCount++;
+        });
+
+        const keywordScore =
+            queryWords.length
+                ? overlapCount / queryWords.length
+                : 0;
+
+        return {
+            ...item,
+            keywordScore,
+            rerankScore:
+                item.score * .65 +
+                keywordScore * .35
+        };
+
+    });
+
+    currentResults.sort(
+        (a,b) => b.rerankScore - a.rerankScore
+    );
+
+    /*
+      Render each stage.
+    */
+
+    document.getElementById("queryDisplay")
+        .textContent = query;
+
+    renderQueryEmbedding();
+
+    renderRetrieval();
+
+    renderReranking();
+
+    renderContext();
+
+    generateAnswer(query);
+
+    showStage("stage-query");
+    activatePipeline(4);
+
+    setTimeout(() => {
+
+        showStage("stage-query-embedding");
+        activatePipeline(5);
+
+    },700);
+
+    setTimeout(() => {
+
+        showStage("stage-retrieve");
+        activatePipeline(6);
+
+    },1400);
+
+    setTimeout(() => {
+
+        showStage("stage-rerank");
+        activatePipeline(7);
+
+    },2100);
+
+    setTimeout(() => {
+
+        showStage("stage-context");
+        activatePipeline(8);
+
+    },2800);
+
+    setTimeout(() => {
+
+        showStage("stage-generate");
+        activatePipeline(9);
+
+    },3500);
+}
+
+/* ---------------------------------------
+   RETRIEVAL
+--------------------------------------- */
+
+function renderRetrieval() {
+
+    const container =
+        document.getElementById("retrievalResults");
+
+    container.innerHTML = "";
+
+    const sorted =
+        chunks.map((chunk,i) => ({
+            index:i,
+            text:chunk,
+            score:cosineSimilarity(queryVector,embeddings[i])
+        }))
+        .sort((a,b) => b.score-a.score);
+
+    sorted.forEach((item,i) => {
+
+        const isSelected =
+            currentResults.some(
+                x => x.index === item.index
+            );
+
+        container.innerHTML += `
+            <div class="result ${i===0 ? "best":""}">
+                <div class="chunk-header">
+                    <span>CHUNK ${item.index+1}
+                    ${isSelected ? " • RETRIEVED" : ""}</span>
+
+                    <span class="score">
+                        ${(item.score*100).toFixed(1)}%
+                    </span>
+                </div>
+
+                <div class="bar">
+                    <div class="bar-inner"
+                         style="width:${Math.min(item.score*100,100)}%">
+                    </div>
+                </div>
+
+                <div class="chunk-text">
+                    ${escapeHtml(item.text)}
+                </div>
+            </div>
+        `;
+    });
+}
+
+/* ---------------------------------------
+   RERANK
+--------------------------------------- */
+
+function renderReranking() {
+
+    const container =
+        document.getElementById("rerankResults");
+
+    container.innerHTML = "";
+
+    currentResults.forEach((item,i) => {
+
+        container.innerHTML += `
+            <div class="result ${i===0 ? "best":""}">
+                <div class="chunk-header">
+                    <span>
+                        RANK #${i+1} • CHUNK ${item.index+1}
+                    </span>
+
+                    <span class="score">
+                        ${(item.rerankScore*100).toFixed(1)}%
+                    </span>
+                </div>
+
+                <div class="chunk-text">
+                    ${escapeHtml(item.text)}
+                </div>
+
+                <div style="
+                    margin-top:9px;
+                    font-size:11px;
+                    color:#687386;
+                ">
+                    Vector similarity:
+                    ${(item.score*100).toFixed(1)}%
+                    &nbsp; | &nbsp;
+                    Keyword relevance:
+                    ${(item.keywordScore*100).toFixed(1)}%
+                </div>
+            </div>
+        `;
+    });
+}
+
+/* ---------------------------------------
+   CONTEXT CONSTRUCTION
+--------------------------------------- */
+
+function renderContext() {
+
+    const query =
+        document.getElementById("query").value;
+
+    let context = `
+SYSTEM:
+You are a helpful assistant. Answer the user's question
+using the provided context. Do not invent information.
+
+RETRIEVED CONTEXT:
+`;
+
+    currentResults.forEach((item,i) => {
+
+        context += `
+--- SOURCE ${i+1} / CHUNK ${item.index+1} ---
+${item.text}
+
+`;
+    });
+
+    context += `
+USER QUESTION:
+${query}
+`;
+
+    document.getElementById("context")
+        .textContent = context;
+}
+
+/* ---------------------------------------
+   SIMULATED LLM
+--------------------------------------- */
+
+function generateAnswer(query) {
+
+    const lower = query.toLowerCase();
+
+    let answer = "";
+
+    if(
+        lower.includes("annual") &&
+        lower.includes("leave")
+    ) {
+
+        answer =
+            "Employees receive <strong>24 days of paid annual leave</strong> every calendar year. " +
+            "The handbook also states that leave should be requested through the HR portal " +
+            "at least three working days in advance, and up to 12 unused days can be carried forward.";
+
+    } else if(
+        lower.includes("sick")
+    ) {
+
+        answer =
+            "Employees receive <strong>12 days of sick leave per year</strong>. " +
+            "A medical certificate may be requested for absences longer than two consecutive working days.";
+
+    } else if(
+        lower.includes("work") &&
+        lower.includes("home")
+    ) {
+
+        answer =
+            "Employees can work from home <strong>up to two days per week</strong>, " +
+            "subject to manager approval.";
+
+    } else if(
+        lower.includes("parental")
+    ) {
+
+        answer =
+            "Eligible employees receive <strong>26 weeks of paid parental leave</strong>. " +
+            "It can be taken continuously or split into two periods with HR approval.";
+
+    } else if(
+        lower.includes("learning") ||
+        lower.includes("budget")
+    ) {
+
+        answer =
+            "Every employee receives an annual learning budget of <strong>₹50,000</strong>, " +
+            "which can be used for professional courses, conferences, books and certifications.";
+
+    } else {
+
+        if(currentResults.length) {
+
+            answer =
+                "Based on the retrieved context, the most relevant information is: " +
+                "<strong>" +
+                escapeHtml(currentResults[0].text.substring(0,300)) +
+                "</strong>";
+
+        } else {
+
+            answer =
+                "I couldn't find sufficiently relevant information in the retrieved context.";
+        }
+    }
+
+    document.getElementById("finalAnswer")
+        .innerHTML = answer;
+}
+
+/* ---------------------------------------
+   RESET
+--------------------------------------- */
+
+function resetSimulator() {
+
+    chunks = [];
+    embeddings = [];
+    currentResults = [];
+    queryVector = [];
+
+    document.querySelectorAll(".stage")
+        .forEach((x,i) =>
+            x.classList.toggle("visible", i === 0)
+        );
+
+    activatePipeline(0);
+
+    document.getElementById("chunks")
+        .innerHTML = "";
+
+    document.getElementById("embeddings")
+        .innerHTML = "";
+
+    document.getElementById("retrievalResults")
+        .innerHTML = "";
+
+    document.getElementById("rerankResults")
+        .innerHTML = "";
+
+    document.getElementById("context")
+        .textContent = "";
+
+    document.getElementById("rawPreview")
+        .textContent =
+        document.getElementById("document").value;
+}
+
+/* ---------------------------------------
+   INITIALIZE
+--------------------------------------- */
+
+document.getElementById("rawPreview")
+    .textContent =
+    document.getElementById("document").value;
+
+updateValue("chunkSize","chunkSizeValue");
+updateValue("overlap","overlapValue");
+updateValue("topK","topKValue");
+updateValue("threshold","thresholdValue");
+
+</script>
+
+</body>
+</html>
